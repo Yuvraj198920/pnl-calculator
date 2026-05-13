@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zerodha Options P&L Calculator Tuned</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] { --text-sm:clamp(.875rem,.8rem + .35vw,1rem); --text-base:clamp(1rem,.95rem + .25vw,1.125rem); --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem); --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem); --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem; --space-8:2rem; --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-border:#d4d1ca; --color-text:#28251d; --color-text-muted:#7a7974; --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-success:#437a22; --color-error:#a13544; --color-card:#fff; --radius:18px; --font:'Inter',sans-serif; }
+    [data-theme="dark"] { --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-border:#393836; --color-text:#cdccca; --color-text-muted:#979692; --color-primary:#4f98a3; --color-primary-hover:#227f8b; --color-success:#6daa45; --color-error:#dd6974; --color-card:#22211f; }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--color-bg),var(--color-surface));color:var(--color-text);font:400 var(--text-base)/1.55 var(--font)} button,input,select{font:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:var(--space-6)} .top{display:flex;justify-content:space-between;gap:var(--space-4);align-items:center;margin-bottom:var(--space-6)}
+    .title h1{margin:0;font-size:var(--text-xl);line-height:1.05}.title p{margin:.35rem 0 0;color:var(--color-text-muted);font-size:var(--text-sm)}
+    .toggle{min-width:44px;min-height:44px;border-radius:999px;border:1px solid var(--color-border);background:var(--color-card);color:var(--color-text)}
+    .layout{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--space-6)} .card{background:var(--color-card);border:1px solid var(--color-border);border-radius:22px;padding:var(--space-6)}
+    .section-title{margin:0 0 .35rem;font-size:var(--text-lg)} .muted{margin:0 0 var(--space-6);color:var(--color-text-muted)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)} .field{display:flex;flex-direction:column;gap:.45rem}
+    label{font-size:var(--text-sm);font-weight:600} small{color:var(--color-text-muted);font-size:.82rem} input,select{width:100%;padding:.9rem 1rem;border-radius:14px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text)}
+    .subcard{margin-top:var(--space-4);padding:var(--space-4);border:1px solid var(--color-border);border-radius:18px;background:var(--color-surface-2)}
+    .actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:var(--space-6)} .btn{border:none;border-radius:999px;padding:.95rem 1.15rem;min-height:44px;font-weight:700} .primary{background:var(--color-primary);color:#fff}.primary:hover{background:var(--color-primary-hover)} .secondary{background:var(--color-surface-2);color:var(--color-text);border:1px solid var(--color-border)}
+    .metric{padding:1rem;border:1px solid var(--color-border);border-radius:18px;background:var(--color-surface-2);margin-bottom:1rem} .metric span{display:block;color:var(--color-text-muted);font-size:var(--text-sm);margin-bottom:.35rem} .metric strong{font-size:clamp(1.5rem,1.2rem + 1vw,2.2rem);line-height:1.05}
+    .pos{color:var(--color-success)} .neg{color:var(--color-error)} .hint{padding:1rem;border-radius:16px;background:rgba(1,105,111,.08);font-size:var(--text-sm);margin:1rem 0}
+    table{width:100%;border-collapse:collapse;font-size:var(--text-sm)} th,td{padding:.8rem .35rem;border-bottom:1px solid var(--color-border);text-align:left} th:last-child,td:last-child{text-align:right}
+    @media (max-width:960px){.layout,.grid{grid-template-columns:1fr}.wrap{padding:1rem}.top{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">
+        <h1>Zerodha Options P&amp;L Calculator</h1>
+        <p>Tuned with editable F&amp;O options rates and separate STT handling for normal closed trades versus exercised options.</p>
+      </div>
+      <button class="toggle" data-theme-toggle aria-label="Switch theme">◐</button>
+    </div>
+
+    <div class="layout">
+      <section class="card">
+        <h2 class="section-title">Trade inputs</h2>
+        <p class="muted">Use buy and sell values for a normal closed trade. Switch to manual charges if you want exact results from a Zerodha PDF or contract note.</p>
+        <div class="grid">
+          <div class="field"><label for="buyValue">Buy value</label><input id="buyValue" type="number" step="0.01" value="29716"><small>Total premium paid.</small></div>
+          <div class="field"><label for="sellValue">Sell value</label><input id="sellValue" type="number" step="0.01" value="30226"><small>Total premium received.</small></div>
+          <div class="field"><label for="orders">Executed orders</label><input id="orders" type="number" step="1" min="1" value="2"><small>Usually 2 for one buy and one sell.</small></div>
+          <div class="field"><label for="mode">Charge mode</label><select id="mode"><option value="auto" selected>Auto estimate</option><option value="manual">Manual total charges</option></select><small>Use manual when PDF totals are available.</small></div>
+          <div class="field"><label for="sttMode">STT mode</label><select id="sttMode"><option value="shorted" selected>Normal closed trade</option><option value="exercised">Bought and exercised</option></select><small>Exercise uses intrinsic value STT.</small></div>
+          <div class="field" id="intrinsicWrap" style="display:none"><label for="intrinsicValue">Intrinsic value</label><input id="intrinsicValue" type="number" step="0.01" value="0"><small>Only needed for exercised options.</small></div>
+          <div class="field" id="manualWrap" style="display:none"><label for="manualCharges">Manual total charges</label><input id="manualCharges" type="number" step="0.0001" value="137.1147"><small>Paste Zerodha total charges here.</small></div>
+        </div>
+
+        <div class="subcard">
+          <h3 class="section-title" style="font-size:1.05rem">Editable Zerodha F&amp;O options rates</h3>
+          <div class="grid">
+            <div class="field"><label for="brokeragePerOrder">Brokerage per order</label><input id="brokeragePerOrder" type="number" step="0.01" value="20"></div>
+            <div class="field"><label for="transactionRate">Transaction charges %</label><input id="transactionRate" type="number" step="0.00001" value="0.03553"><small>NSE option premium rate.</small></div>
+            <div class="field"><label for="sttSellRate">STT sell premium %</label><input id="sttSellRate" type="number" step="0.00001" value="0.15"></div>
+            <div class="field"><label for="sttExerciseRate">STT intrinsic value %</label><input id="sttExerciseRate" type="number" step="0.00001" value="0.15"></div>
+            <div class="field"><label for="sebiPerCrore">SEBI per crore</label><input id="sebiPerCrore" type="number" step="0.01" value="10"></div>
+            <div class="field"><label for="stampRate">Stamp duty %</label><input id="stampRate" type="number" step="0.00001" value="0.003"></div>
+            <div class="field"><label for="gstRate">GST %</label><input id="gstRate" type="number" step="0.01" value="18"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="calcBtn">Calculate</button>
+          <button class="btn secondary" id="sampleBtn">Load your PDF sample</button>
+          <button class="btn secondary" id="tradeBtn">Load screenshot trade</button>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2 class="section-title">Results</h2>
+        <div class="metric"><span>Gross P&amp;L</span><strong id="grossPnl">₹510.00</strong></div>
+        <div class="metric"><span>Total charges</span><strong id="totalCharges">₹90.06</strong></div>
+        <div class="metric"><span>Net result</span><strong id="netResult" class="pos">₹419.94</strong></div>
+        <div class="hint" id="summaryText">Estimated net profit is shown after brokerage and statutory charges.</div>
+        <table>
+          <thead><tr><th>Charge</th><th>Amount</th></tr></thead>
+          <tbody id="breakdown"></tbody>
+        </table>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      buyValue: document.getElementById('buyValue'), sellValue: document.getElementById('sellValue'), orders: document.getElementById('orders'), mode: document.getElementById('mode'), sttMode: document.getElementById('sttMode'), intrinsicWrap: document.getElementById('intrinsicWrap'), intrinsicValue: document.getElementById('intrinsicValue'), manualWrap: document.getElementById('manualWrap'), manualCharges: document.getElementById('manualCharges'),
+      brokeragePerOrder: document.getElementById('brokeragePerOrder'), transactionRate: document.getElementById('transactionRate'), sttSellRate: document.getElementById('sttSellRate'), sttExerciseRate: document.getElementById('sttExerciseRate'), sebiPerCrore: document.getElementById('sebiPerCrore'), stampRate: document.getElementById('stampRate'), gstRate: document.getElementById('gstRate'),
+      grossPnl: document.getElementById('grossPnl'), totalCharges: document.getElementById('totalCharges'), netResult: document.getElementById('netResult'), breakdown: document.getElementById('breakdown'), summaryText: document.getElementById('summaryText'), calcBtn: document.getElementById('calcBtn'), sampleBtn: document.getElementById('sampleBtn'), tradeBtn: document.getElementById('tradeBtn')
+    };
+
+    const formatINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(Number(n || 0));
+    function getRates(){ return { brokeragePerOrder:Number(els.brokeragePerOrder.value||20), transactionRate:Number(els.transactionRate.value||0)/100, sttSellRate:Number(els.sttSellRate.value||0)/100, sttExerciseRate:Number(els.sttExerciseRate.value||0)/100, sebiRate:Number(els.sebiPerCrore.value||10)/10000000, stampRate:Number(els.stampRate.value||0)/100, gstRate:Number(els.gstRate.value||18)/100 }; }
+    function computeAuto(buyValue,sellValue,orders,sttMode,intrinsicValue){ const r=getRates(); const brokerage=orders*r.brokeragePerOrder; const transaction=(buyValue+sellValue)*r.transactionRate; const stt=sttMode==='exercised' ? intrinsicValue*r.sttExerciseRate : sellValue*r.sttSellRate; const sebi=(buyValue+sellValue)*r.sebiRate; const stamp=buyValue*r.stampRate; const gst=(brokerage+transaction+sebi)*r.gstRate; const total=brokerage+transaction+stt+sebi+stamp+gst; return {brokerage,transaction,stt,sebi,stamp,gst,total}; }
+    function render(rows){ els.breakdown.innerHTML = rows.map(([a,b]) => `<tr><td>${a}</td><td>${formatINR(b)}</td></tr>`).join(''); }
+    function sync(){ els.manualWrap.style.display = els.mode.value==='manual' ? 'flex' : 'none'; els.intrinsicWrap.style.display = els.sttMode.value==='exercised' ? 'flex' : 'none'; }
+    function calculate(){ const buy=Number(els.buyValue.value||0), sell=Number(els.sellValue.value||0), orders=Math.max(1, Number(els.orders.value||2)), intrinsic=Number(els.intrinsicValue.value||0), gross=sell-buy; let total=0, rows=[]; if(els.mode.value==='manual'){ total=Number(els.manualCharges.value||0); rows=[['Manual charges', total]]; } else { const c=computeAuto(buy,sell,orders,els.sttMode.value,intrinsic); total=c.total; rows=[['Brokerage',c.brokerage],['Exchange transaction charges',c.transaction],[els.sttMode.value==='exercised' ? 'STT (intrinsic value)' : 'STT (sell side premium)',c.stt],['SEBI turnover fees',c.sebi],['Stamp duty (buy side)',c.stamp],['GST',c.gst]]; } const net=gross-total; els.grossPnl.textContent=formatINR(gross); els.totalCharges.textContent=formatINR(total); els.netResult.textContent=formatINR(net); els.netResult.className = net>=0 ? 'pos' : 'neg'; els.summaryText.textContent = net>=0 ? `Estimated net profit is ${formatINR(net)} after total charges of ${formatINR(total)}.` : `Estimated net loss is ${formatINR(Math.abs(net))} after total charges of ${formatINR(total)}.`; render(rows); }
+    [els.buyValue,els.sellValue,els.orders,els.manualCharges,els.intrinsicValue,els.brokeragePerOrder,els.transactionRate,els.sttSellRate,els.sttExerciseRate,els.sebiPerCrore,els.stampRate,els.gstRate].forEach(el=>el.addEventListener('input',calculate));
+    els.mode.addEventListener('change',()=>{sync();calculate();}); els.sttMode.addEventListener('change',()=>{sync();calculate();}); els.calcBtn.addEventListener('click',calculate);
+    els.sampleBtn.addEventListener('click',()=>{ els.buyValue.value='37897.5'; els.sellValue.value='38011.5'; els.orders.value='2'; els.mode.value='manual'; els.manualCharges.value='137.1147'; els.sttMode.value='shorted'; sync(); calculate(); });
+    els.tradeBtn.addEventListener('click',()=>{ els.buyValue.value='29716'; els.sellValue.value='30226'; els.orders.value='2'; els.mode.value='auto'; els.sttMode.value='shorted'; sync(); calculate(); });
+    (function(){ const t=document.querySelector('[data-theme-toggle]'); const r=document.documentElement; let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'; r.setAttribute('data-theme',d); t.addEventListener('click',()=>{ d=d==='dark'?'light':'dark'; r.setAttribute('data-theme',d);});})();
+    sync(); calculate();
+  </script>
+</body>
+</html>
